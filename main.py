@@ -18,18 +18,23 @@ TIME_LIMIT = 120  # in seconds
 BLACK = (0, 0, 0)
 PLAYER_COLOR = (0, 255, 0)
 FOOD_COLOR = (255, 0, 0)
+TEXT_COLOR = (255, 255, 255)
 
 # Set up the display
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Blob Collect Game")
 clock = pygame.time.Clock()
 
+# Font for score and timer
+font = pygame.font.SysFont(None, 36)
+
 # Player Class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = pygame.Surface((20, 20), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, PLAYER_COLOR, (10, 10), 10)
+        self.image_orig = pygame.Surface((20, 20), pygame.SRCALPHA)
+        pygame.draw.circle(self.image_orig, PLAYER_COLOR, (10, 10), 10)
+        self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         self.pos = pygame.math.Vector2(self.rect.center)
         self.direction = pygame.math.Vector2(0, -1)  # Facing upwards
@@ -38,18 +43,41 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self.angle += PLAYER_ROTATE_SPEED
-        if keys[pygame.K_RIGHT]:
             self.angle -= PLAYER_ROTATE_SPEED
+        if keys[pygame.K_RIGHT]:
+            self.angle += PLAYER_ROTATE_SPEED
 
         # Update direction based on angle
         self.direction = pygame.math.Vector2(0, -1).rotate(self.angle)
         self.pos += self.direction * PLAYER_SPEED
-        self.rect.center = self.pos
 
-        # Keep the player within the game area
-        self.pos.x = max(10, min(WIDTH - 10, self.pos.x))
-        self.pos.y = max(10, min(HEIGHT - 10, self.pos.y))
+        # Check for collisions with walls and bounce
+        bounced = False
+        if self.pos.x <= 10:
+            self.pos.x = 10
+            self.direction.x *= -1
+            bounced = True
+        elif self.pos.x >= WIDTH - 10:
+            self.pos.x = WIDTH - 10
+            self.direction.x *= -1
+            bounced = True
+
+        if self.pos.y <= 10:
+            self.pos.y = 10
+            self.direction.y *= -1
+            bounced = True
+        elif self.pos.y >= HEIGHT - 10:
+            self.pos.y = HEIGHT - 10
+            self.direction.y *= -1
+            bounced = True
+
+        if bounced:
+            # Recalculate angle based on new direction
+            self.angle = self.direction.angle_to(pygame.math.Vector2(0, -1))
+
+        # Rotate the image
+        self.image = pygame.transform.rotate(self.image_orig, -self.angle)
+        self.rect = self.image.get_rect(center=self.pos)
 
 # Food Class
 class Food(pygame.sprite.Sprite):
@@ -81,6 +109,7 @@ running = True
 while running:
     dt = clock.tick(FPS) / 1000  # Amount of seconds between each loop
     elapsed_time = (pygame.time.get_ticks() - start_time) / 1000
+    time_remaining = max(0, TIME_LIMIT - elapsed_time)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -106,6 +135,17 @@ while running:
     # Draw
     window.fill(BLACK)
     all_sprites.draw(window)
+
+    # Render score
+    score_text = font.render(f"Score: {score}", True, TEXT_COLOR)
+    window.blit(score_text, (10, 10))
+
+    # Render timer
+    minutes = int(time_remaining) // 60
+    seconds = int(time_remaining) % 60
+    timer_text = font.render(f"Time: {minutes}:{seconds:02}", True, TEXT_COLOR)
+    window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
+
     pygame.display.flip()
 
 pygame.quit()
