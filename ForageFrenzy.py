@@ -21,8 +21,6 @@ class Colour(tuple, Enum):
     RED = (255, 0, 0)
     WHITE = (255, 255, 255)
 
-
-
 # Define GameState Enum
 class GameState(Enum):
     PLAYING = 1
@@ -31,7 +29,7 @@ class GameState(Enum):
 
 # Set up the display
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("ForgeFrenzy")
+pygame.display.set_caption("ForageFrenzy")
 clock = pygame.time.Clock()
 
 # Font for score and timer
