@@ -19,6 +19,8 @@ BLACK = (0, 0, 0)
 PLAYER_COLOR = (0, 255, 0)
 FOOD_COLOR = (255, 0, 0)
 TEXT_COLOR = (255, 255, 255)
+VICTORY_COLOR = (0, 255, 0)
+GAME_OVER_COLOR = (255, 0, 0)
 
 # Set up the display
 window = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -27,6 +29,7 @@ clock = pygame.time.Clock()
 
 # Font for score and timer
 font = pygame.font.SysFont(None, 36)
+large_font = pygame.font.SysFont(None, 72)
 
 # Player Class
 class Player(pygame.sprite.Sprite):
@@ -107,6 +110,7 @@ for _ in range(FOOD_COUNT):
 # Game Variables
 score = 0
 start_time = pygame.time.get_ticks()
+game_state = 'playing'  # Can be 'playing', 'won', or 'game_over'
 
 # Game Loop
 running = True
@@ -119,36 +123,55 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # Update
-    all_sprites.update()
+    if game_state == 'playing':
+        # Update
+        all_sprites.update()
 
-    # Check for collisions
-    hits = pygame.sprite.spritecollide(player, food_group, True)
-    if hits:
-        score += len(hits)
-        print(f"Score: {score}")
+        # Check for collisions
+        hits = pygame.sprite.spritecollide(player, food_group, True)
+        if hits:
+            score += len(hits)
 
-    # Check for win or time up
-    if score >= FOOD_COUNT:
-        print("You collected all the food blobs! You win!")
-        running = False
-    elif elapsed_time >= TIME_LIMIT:
-        print("Time's up! Game over!")
-        running = False
+        # Check for win or time up
+        if score >= FOOD_COUNT:
+            game_state = 'won'
+        elif elapsed_time >= TIME_LIMIT:
+            game_state = 'game_over'
 
-    # Draw
-    window.fill(BLACK)
-    all_sprites.draw(window)
+        # Draw
+        window.fill(BLACK)
+        all_sprites.draw(window)
 
-    # Render score
-    score_text = font.render(f"Score: {score}", True, TEXT_COLOR)
-    window.blit(score_text, (10, 10))
+        # Render score
+        score_text = font.render(f"Score: {score}", True, TEXT_COLOR)
+        window.blit(score_text, (10, 10))
 
-    # Render timer
-    minutes = int(time_remaining) // 60
-    seconds = int(time_remaining) % 60
-    timer_text = font.render(f"Time: {minutes}:{seconds:02}", True, TEXT_COLOR)
-    window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
+        # Render timer
+        minutes = int(time_remaining) // 60
+        seconds = int(time_remaining) % 60
+        timer_text = font.render(f"Time: {minutes}:{seconds:02}", True, TEXT_COLOR)
+        window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
+
+    else:
+        # Display victory or game over screen
+        window.fill(BLACK)
+        if game_state == 'won':
+            message_text = large_font.render("You won!", True, VICTORY_COLOR)
+        else:
+            message_text = large_font.render("Game over!", True, GAME_OVER_COLOR)
+
+        message_rect = message_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        window.blit(message_text, message_rect)
+
+        # Optionally, you can add instructions to quit or restart
+        instruction_text = font.render("Press ESC to quit", True, TEXT_COLOR)
+        instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+        window.blit(instruction_text, instruction_rect)
+
+        # Check for exit
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            running = False
 
     pygame.display.flip()
 
