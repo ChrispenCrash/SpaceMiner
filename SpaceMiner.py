@@ -20,6 +20,7 @@ class Colour(tuple, Enum):
     GREEN = (0, 255, 0)
     RED = (255, 0, 0)
     WHITE = (255, 255, 255)
+    ORANGE = (255, 165, 0)
 
 # Define GameState Enum
 class GameState(Enum):
@@ -40,8 +41,15 @@ large_font = pygame.font.SysFont(None, 72)
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image_orig = pygame.Surface((20, 20), pygame.SRCALPHA)
-        pygame.draw.circle(self.image_orig, Colour.GREEN, (10, 10), 10)
+
+        # self.image_orig = pygame.Surface((20, 20), pygame.SRCALPHA)        
+        # pygame.draw.circle(self.image_orig, Colour.GREEN, (10, 10), 10)
+
+        # Load the pixel art rocket image
+        self.image_orig = pygame.image.load("assets/rocket.png").convert_alpha()
+        self.image_orig = pygame.transform.scale(self.image_orig, (40, 40))  # Adjust dimensions as needed
+
+
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         self.pos = pygame.math.Vector2(self.rect.center)
@@ -85,7 +93,7 @@ class Player(pygame.sprite.Sprite):
             self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
 
         # Rotate the image
-        self.image = pygame.transform.rotate(self.image_orig, -self.angle)
+        self.image = pygame.transform.rotate(self.image_orig, -self.angle - 90)
         self.rect = self.image.get_rect(center=self.pos)
 
         # Add current position to tail positions
@@ -105,7 +113,7 @@ class Player(pygame.sprite.Sprite):
             # Both radius and alpha decrease further from the player
             radius = int(min_radius + (max_radius - min_radius) * (i / tail_length))
             alpha = int(255 * (i / tail_length))  # More transparent for smaller, far segments
-            color = (*Colour.GREEN, alpha)
+            color = (*Colour.ORANGE, alpha)
             
             # Draw each segment with its computed size and alpha
             tail_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
