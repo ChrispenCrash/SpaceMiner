@@ -21,6 +21,8 @@ class Colour(tuple, Enum):
     RED = (255, 0, 0)
     WHITE = (255, 255, 255)
     ORANGE = (255, 165, 0)
+    GREY = (128, 128, 128)
+    DARK_GREY = (15, 15, 15)
 
 # Define GameState Enum
 class GameState(Enum):
@@ -41,9 +43,6 @@ large_font = pygame.font.SysFont(None, 72)
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-
-        # self.image_orig = pygame.Surface((20, 20), pygame.SRCALPHA)        
-        # pygame.draw.circle(self.image_orig, Colour.GREEN, (10, 10), 10)
 
         # Load the pixel art rocket image
         self.image_orig = pygame.image.load("assets/rocket.png").convert_alpha()
@@ -155,7 +154,7 @@ for _ in range(FOOD_COUNT):
 # Game Variables
 score = 0
 start_time = pygame.time.get_ticks()
-game_state = GameState.PLAYING  # Using Enum instead of string
+game_state = GameState.PLAYING
 
 # Game Loop
 running = True
@@ -184,11 +183,10 @@ while running:
             game_state = GameState.GAME_OVER
 
         # Draw
-        window.fill(Colour.BLACK)
+        window.fill(Colour.DARK_GREY)
 
         # all_sprites.draw(window)
         # Draw all elements
-        window.fill(Colour.BLACK)
         for sprite in all_sprites:
             if isinstance(sprite, Player):
                 sprite.draw(window)  # Custom draw method for player with tail
