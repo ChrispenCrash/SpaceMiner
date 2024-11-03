@@ -25,7 +25,7 @@ GAME_OVER_COLOR = (255, 0, 0)
 
 # Set up the display
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Blob Collect Game")
+pygame.display.set_caption("ForgeFrenzy")
 clock = pygame.time.Clock()
 
 # Font for score and timer
@@ -47,30 +47,28 @@ class Player(pygame.sprite.Sprite):
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         self.pos = pygame.math.Vector2(self.rect.center)
-        # Start with a random angle
         self.angle = random.uniform(0, 360)
-        # Direction vector based on the angle
         radians = math.radians(self.angle)
         self.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
+        
+        # List to store tail positions
+        self.tail_positions = []
+        self.max_tail_length = 10  # Adjust for desired tail length
 
     def update(self):
+        # Update position and rotation as before
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.angle -= PLAYER_ROTATE_SPEED
         if keys[pygame.K_RIGHT]:
             self.angle += PLAYER_ROTATE_SPEED
 
-        # Keep angle within [0, 360)
         self.angle %= 360
-
-        # Update direction vector based on angle
         radians = math.radians(self.angle)
         self.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
-
-        # Update position
         self.pos += self.direction * PLAYER_SPEED
 
-        # Check for collisions with walls and bounce
+        # Boundary checks
         if self.pos.x <= 10:
             self.pos.x = 10
             self.direction.x *= -1
@@ -79,7 +77,6 @@ class Player(pygame.sprite.Sprite):
             self.pos.x = WIDTH - 10
             self.direction.x *= -1
             self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
-
         if self.pos.y <= 10:
             self.pos.y = 10
             self.direction.y *= -1
@@ -92,6 +89,26 @@ class Player(pygame.sprite.Sprite):
         # Rotate the image
         self.image = pygame.transform.rotate(self.image_orig, -self.angle)
         self.rect = self.image.get_rect(center=self.pos)
+
+        # Add current position to tail positions
+        self.tail_positions.append(self.pos.copy())
+        if len(self.tail_positions) > self.max_tail_length:
+            self.tail_positions.pop(0)  # Limit the tail length
+
+    def draw(self, surface):
+        # Draw the tail
+        for i, pos in enumerate(self.tail_positions):
+            alpha = int(255 * (i / len(self.tail_positions)))  # Fading effect
+            color = (*PLAYER_COLOR, alpha)  # Add alpha to player color
+            tail_surf = pygame.Surface((20, 20), pygame.SRCALPHA)
+            pygame.draw.circle(tail_surf, color, (10, 10), 10)
+            surface.blit(tail_surf, pos - pygame.math.Vector2(10, 10))  # Center the tail segment
+
+        # Draw the player itself
+        surface.blit(self.image, self.rect)
+
+# Update the main loop to call player.draw() instead of relying on the default all_sprites.draw(window)
+
 
 # Food Class
 class Food(pygame.sprite.Sprite):
@@ -147,7 +164,16 @@ while running:
 
         # Draw
         window.fill(BLACK)
-        all_sprites.draw(window)
+        
+        # all_sprites.draw(window)
+        # Draw all elements
+        window.fill(BLACK)
+        for sprite in all_sprites:
+            if isinstance(sprite, Player):
+                sprite.draw(window)  # Custom draw method for player with tail
+            else:
+                window.blit(sprite.image, sprite.rect)
+
 
         # Render score
         score_text = font.render(f"Score: {score}", True, TEXT_COLOR)
