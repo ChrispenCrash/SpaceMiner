@@ -29,7 +29,7 @@ class GameState(Enum):
 
 # Set up the display
 window = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("ForageFrenzy")
+pygame.display.set_caption("Space Miner")
 clock = pygame.time.Clock()
 
 # Font for score and timer
