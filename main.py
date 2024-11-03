@@ -13,7 +13,7 @@ FPS = 60
 PLAYER_SPEED = 5
 PLAYER_ROTATE_SPEED = 5
 FOOD_COUNT = 10
-TIME_LIMIT = 120  # in seconds
+TIME_LIMIT = 30  # in seconds
 
 # Colors
 BLACK = (0, 0, 0)
