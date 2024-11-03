@@ -39,6 +39,14 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 large_font = pygame.font.SysFont(None, 72)
 
+
+# Define star density (stars per 10,000 pixels, adjust as needed)
+STAR_DENSITY = 0.0002  # 0.02 stars per 100 pixels would roughly give 120 stars on a 600x600 window
+STAR_COUNT = int(WIDTH * HEIGHT * STAR_DENSITY)
+
+# Generate scaled star positions
+stars = [(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(STAR_COUNT)]
+
 # Player Class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -182,8 +190,10 @@ while running:
         elif elapsed_time >= TIME_LIMIT:
             game_state = GameState.GAME_OVER
 
-        # Draw
+        # Draw Background Stars
         window.fill(Colour.DARK_GREY)
+        for (x, y) in stars:
+            pygame.draw.rect(window, Colour.WHITE, (x, y, 2, 2))
 
         # all_sprites.draw(window)
         # Draw all elements
