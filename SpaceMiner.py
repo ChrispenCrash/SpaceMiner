@@ -125,7 +125,7 @@ class Player(pygame.sprite.Sprite):
 
     def draw(self, surface):
         # Draw the tail relative to the camera offset
-        max_radius = 9  # Largest radius for the part of the tail closest to the player
+        max_radius = 7  # Largest radius for the part of the tail closest to the player
         min_radius = 2   # Smallest radius for the part of the tail farthest from the player
         
         tail_length = len(self.tail_positions)
