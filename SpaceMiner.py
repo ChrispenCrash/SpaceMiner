@@ -1,3 +1,6 @@
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 import pygame
 import random
 import math
@@ -12,8 +15,14 @@ WIDTH, HEIGHT = 600, 600
 FPS = 60
 PLAYER_SPEED = 5
 PLAYER_ROTATE_SPEED = 5
-FOOD_COUNT = 10
+ASTEROID_COUNT = 10
 TIME_LIMIT = 30  # in seconds
+
+# Define the larger game space dimensions
+GAME_WIDTH, GAME_HEIGHT = WIDTH * 2, HEIGHT * 2  # Twice the size of the window
+
+# Add a camera offset
+camera_offset = pygame.Vector2(0, 0)
 
 class Colour(tuple, Enum):
     BLACK = (0, 0, 0)
@@ -42,10 +51,10 @@ large_font = pygame.font.SysFont(None, 72)
 
 # Define star density (stars per 10,000 pixels, adjust as needed)
 STAR_DENSITY = 0.0002  # 0.02 stars per 100 pixels would roughly give 120 stars on a 600x600 window
-STAR_COUNT = int(WIDTH * HEIGHT * STAR_DENSITY)
+STAR_COUNT = int(GAME_WIDTH * GAME_HEIGHT * STAR_DENSITY)
 
 # Generate scaled star positions
-stars = [(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(STAR_COUNT)]
+stars = [(random.randint(0, GAME_WIDTH), random.randint(0, GAME_HEIGHT)) for _ in range(STAR_COUNT)]
 
 # Player Class
 class Player(pygame.sprite.Sprite):
@@ -53,13 +62,13 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Load the pixel art rocket image
-        self.image_orig = pygame.image.load("assets/rocket.png").convert_alpha()
+        self.image_orig = pygame.image.load("assets/player_rocket.png").convert_alpha()
         self.image_orig = pygame.transform.scale(self.image_orig, (40, 40))  # Adjust dimensions as needed
 
 
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        self.pos = pygame.math.Vector2(self.rect.center)
+        self.pos = pygame.math.Vector2(GAME_WIDTH // 2, GAME_HEIGHT // 2)  # Start in the center of the game space
         self.angle = random.uniform(0, 360)
         radians = math.radians(self.angle)
         self.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
@@ -69,7 +78,7 @@ class Player(pygame.sprite.Sprite):
         self.max_tail_length = 13  # Adjust for desired tail length
 
     def update(self):
-        # Update position and rotation as before
+        # Same movement and angle update logic as before
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.angle -= PLAYER_ROTATE_SPEED
@@ -81,21 +90,22 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
         self.pos += self.direction * PLAYER_SPEED
 
-        # Boundary checks
+        # Updated boundary checks for the larger game space
         if self.pos.x <= 10:
             self.pos.x = 10
             self.direction.x *= -1
             self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
-        elif self.pos.x >= WIDTH - 10:
-            self.pos.x = WIDTH - 10
+        elif self.pos.x >= GAME_WIDTH - 10:
+            self.pos.x = GAME_WIDTH - 10
             self.direction.x *= -1
             self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
+
         if self.pos.y <= 10:
             self.pos.y = 10
             self.direction.y *= -1
             self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
-        elif self.pos.y >= HEIGHT - 10:
-            self.pos.y = HEIGHT - 10
+        elif self.pos.y >= GAME_HEIGHT - 10:
+            self.pos.y = GAME_HEIGHT - 10
             self.direction.y *= -1
             self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
 
@@ -103,37 +113,43 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image_orig, -self.angle - 90)
         self.rect = self.image.get_rect(center=self.pos)
 
-        # Add current position to tail positions
+        # Add current position to tail positions as before
         self.tail_positions.append(self.pos.copy())
         if len(self.tail_positions) > self.max_tail_length:
-            self.tail_positions.pop(0)  # Limit the tail length
+            self.tail_positions.pop(0)
+
+        # Update camera offset based on player's position
+        camera_offset.x = max(0, min(self.pos.x - WIDTH / 2, GAME_WIDTH - WIDTH))
+        camera_offset.y = max(0, min(self.pos.y - HEIGHT / 2, GAME_HEIGHT - HEIGHT))
+
 
     def draw(self, surface):
-        # Define the tail size and fading effect
-        max_radius = 10  # Largest radius, closest to the player
-        min_radius = 2   # Smallest radius, farthest from the player
+        # Draw the tail relative to the camera offset
+        max_radius = 9  # Largest radius for the part of the tail closest to the player
+        min_radius = 2   # Smallest radius for the part of the tail farthest from the player
         
         tail_length = len(self.tail_positions)
         
         for i, pos in enumerate(self.tail_positions):
             # Set radius and alpha for the fading and tapering effect
-            # Both radius and alpha decrease further from the player
             radius = int(min_radius + (max_radius - min_radius) * (i / tail_length))
-            alpha = int(255 * (i / tail_length))  # More transparent for smaller, far segments
+            alpha = int(255 * (i / tail_length))  # More transparent further from the player
             color = (*Colour.ORANGE, alpha)
-            
-            # Draw each segment with its computed size and alpha
+
+            # Draw each segment with computed size and transparency relative to the camera offset
             tail_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
             pygame.draw.circle(tail_surf, color, (radius, radius), radius)
-            surface.blit(tail_surf, pos - pygame.math.Vector2(radius, radius))  # Center the tail segment
+            draw_pos = pos - camera_offset  # Position adjusted by camera offset
+            surface.blit(tail_surf, draw_pos - pygame.math.Vector2(radius, radius))  # Center the tail segment
 
-        # Draw the player itself
-        surface.blit(self.image, self.rect)
+        # Draw the player itself relative to the camera offset
+        surface.blit(self.image, self.rect.topleft - camera_offset)
+
 
 # Update the main loop to call player.draw() instead of relying on the default all_sprites.draw(window)
 
-# Food Class
-class Food(pygame.sprite.Sprite):
+# Asteroid Class
+class Asteroid(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
 
@@ -143,21 +159,21 @@ class Food(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(asteroid_image, rotation_angle)
         
         # Set the position of the asteroid
-        self.rect = self.image.get_rect(center=(random.randint(10, WIDTH - 10), random.randint(10, HEIGHT - 10)))
+        self.rect = self.image.get_rect(center=(random.randint(10, GAME_WIDTH - 10), random.randint(10, GAME_HEIGHT - 10)))
 
 
 # Sprite Groups
 all_sprites = pygame.sprite.Group()
-food_group = pygame.sprite.Group()
+asteroid_group = pygame.sprite.Group()
 
 player = Player()
 all_sprites.add(player)
 
-# Spawn initial food blobs
-for _ in range(FOOD_COUNT):
-    food = Food()
-    all_sprites.add(food)
-    food_group.add(food)
+# Spawn initial asteroids
+for _ in range(ASTEROID_COUNT):
+    asteroid = Asteroid()
+    all_sprites.add(asteroid)
+    asteroid_group.add(asteroid)
 
 # Game Variables
 score = 0
@@ -180,12 +196,12 @@ while running:
         all_sprites.update()
 
         # Check for collisions
-        hits = pygame.sprite.spritecollide(player, food_group, True)
+        hits = pygame.sprite.spritecollide(player, asteroid_group, True)
         if hits:
             score += len(hits)
 
         # Check for win or time up
-        if score >= FOOD_COUNT:
+        if score >= ASTEROID_COUNT:
             game_state = GameState.WON
         elif elapsed_time >= TIME_LIMIT:
             game_state = GameState.GAME_OVER
@@ -193,16 +209,16 @@ while running:
         # Draw Background Stars
         window.fill(Colour.DARK_GREY)
         for (x, y) in stars:
-            pygame.draw.rect(window, Colour.WHITE, (x, y, 2, 2))
+            star_x = x - camera_offset.x
+            star_y = y - camera_offset.y
+            pygame.draw.rect(window, Colour.WHITE, (star_x, star_y, 2, 2))
 
-        # all_sprites.draw(window)
         # Draw all elements
         for sprite in all_sprites:
             if isinstance(sprite, Player):
                 sprite.draw(window)  # Custom draw method for player with tail
             else:
-                window.blit(sprite.image, sprite.rect)
-
+                window.blit(sprite.image, sprite.rect.topleft - camera_offset)
 
         # Render score
         score_text = font.render(f"Score: {score}", True, Colour.WHITE)
