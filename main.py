@@ -53,7 +53,7 @@ class Player(pygame.sprite.Sprite):
         
         # List to store tail positions
         self.tail_positions = []
-        self.max_tail_length = 10  # Adjust for desired tail length
+        self.max_tail_length = 13  # Adjust for desired tail length
 
     def update(self):
         # Update position and rotation as before
@@ -96,16 +96,31 @@ class Player(pygame.sprite.Sprite):
             self.tail_positions.pop(0)  # Limit the tail length
 
     def draw(self, surface):
-        # Draw the tail
+        # Define the tail size and fading effect
+        max_radius = 10  # Largest radius, closest to the player
+        min_radius = 2   # Smallest radius, farthest from the player
+        
+        tail_length = len(self.tail_positions)
+        
         for i, pos in enumerate(self.tail_positions):
-            alpha = int(255 * (i / len(self.tail_positions)))  # Fading effect
-            color = (*PLAYER_COLOR, alpha)  # Add alpha to player color
-            tail_surf = pygame.Surface((20, 20), pygame.SRCALPHA)
-            pygame.draw.circle(tail_surf, color, (10, 10), 10)
-            surface.blit(tail_surf, pos - pygame.math.Vector2(10, 10))  # Center the tail segment
+            # Set radius and alpha for the fading and tapering effect
+            # Both radius and alpha decrease further from the player
+            radius = int(min_radius + (max_radius - min_radius) * (i / tail_length))
+            alpha = int(255 * (i / tail_length))  # More transparent for smaller, far segments
+            color = (*PLAYER_COLOR, alpha)
+            
+            # Draw each segment with its computed size and alpha
+            tail_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.circle(tail_surf, color, (radius, radius), radius)
+            surface.blit(tail_surf, pos - pygame.math.Vector2(radius, radius))  # Center the tail segment
 
         # Draw the player itself
         surface.blit(self.image, self.rect)
+
+
+
+
+
 
 # Update the main loop to call player.draw() instead of relying on the default all_sprites.draw(window)
 
@@ -164,7 +179,7 @@ while running:
 
         # Draw
         window.fill(BLACK)
-        
+
         # all_sprites.draw(window)
         # Draw all elements
         window.fill(BLACK)
