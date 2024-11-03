@@ -15,13 +15,19 @@ PLAYER_ROTATE_SPEED = 5
 FOOD_COUNT = 10
 TIME_LIMIT = 30  # in seconds
 
-# Colors
-BLACK = (0, 0, 0)
-PLAYER_COLOR = (0, 255, 0)
-FOOD_COLOR = (255, 0, 0)
-TEXT_COLOR = (255, 255, 255)
-VICTORY_COLOR = (0, 255, 0)
-GAME_OVER_COLOR = (255, 0, 0)
+class Colour(tuple, Enum):
+    BLACK = (0, 0, 0)
+    GREEN = (0, 255, 0)
+    RED = (255, 0, 0)
+    WHITE = (255, 255, 255)
+
+
+
+# Define GameState Enum
+class GameState(Enum):
+    PLAYING = 1
+    WON = 2
+    GAME_OVER = 3
 
 # Set up the display
 window = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -32,18 +38,12 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 36)
 large_font = pygame.font.SysFont(None, 72)
 
-# Define GameState Enum
-class GameState(Enum):
-    PLAYING = 1
-    WON = 2
-    GAME_OVER = 3
-
 # Player Class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image_orig = pygame.Surface((20, 20), pygame.SRCALPHA)
-        pygame.draw.circle(self.image_orig, PLAYER_COLOR, (10, 10), 10)
+        pygame.draw.circle(self.image_orig, Colour.GREEN, (10, 10), 10)
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         self.pos = pygame.math.Vector2(self.rect.center)
@@ -107,7 +107,7 @@ class Player(pygame.sprite.Sprite):
             # Both radius and alpha decrease further from the player
             radius = int(min_radius + (max_radius - min_radius) * (i / tail_length))
             alpha = int(255 * (i / tail_length))  # More transparent for smaller, far segments
-            color = (*PLAYER_COLOR, alpha)
+            color = (*Colour.GREEN, alpha)
             
             # Draw each segment with its computed size and alpha
             tail_surf = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
@@ -117,20 +117,14 @@ class Player(pygame.sprite.Sprite):
         # Draw the player itself
         surface.blit(self.image, self.rect)
 
-
-
-
-
-
 # Update the main loop to call player.draw() instead of relying on the default all_sprites.draw(window)
-
 
 # Food Class
 class Food(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.Surface((15, 15), pygame.SRCALPHA)
-        pygame.draw.circle(self.image, FOOD_COLOR, (7, 7), 7)
+        pygame.draw.circle(self.image, Colour.RED, (7, 7), 7)
         self.rect = self.image.get_rect(center=(random.randint(10, WIDTH - 10), random.randint(10, HEIGHT - 10)))
 
 # Sprite Groups
@@ -178,11 +172,11 @@ while running:
             game_state = GameState.GAME_OVER
 
         # Draw
-        window.fill(BLACK)
+        window.fill(Colour.BLACK)
 
         # all_sprites.draw(window)
         # Draw all elements
-        window.fill(BLACK)
+        window.fill(Colour.BLACK)
         for sprite in all_sprites:
             if isinstance(sprite, Player):
                 sprite.draw(window)  # Custom draw method for player with tail
@@ -191,28 +185,28 @@ while running:
 
 
         # Render score
-        score_text = font.render(f"Score: {score}", True, TEXT_COLOR)
+        score_text = font.render(f"Score: {score}", True, Colour.WHITE)
         window.blit(score_text, (10, 10))
 
         # Render timer
         minutes = int(time_remaining) // 60
         seconds = int(time_remaining) % 60
-        timer_text = font.render(f"Time: {minutes}:{seconds:02}", True, TEXT_COLOR)
+        timer_text = font.render(f"Time: {minutes}:{seconds:02}", True, Colour.WHITE)
         window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
 
     else:
         # Display victory or game over screen
-        window.fill(BLACK)
+        window.fill(Colour.BLACK)
         if game_state == GameState.WON:
-            message_text = large_font.render("You won!", True, VICTORY_COLOR)
+            message_text = large_font.render("You won!", True, Colour.GREEN)
         else:
-            message_text = large_font.render("Game over!", True, GAME_OVER_COLOR)
+            message_text = large_font.render("Game over!", True, Colour.RED)
 
         message_rect = message_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         window.blit(message_text, message_rect)
 
         # Optionally, you can add instructions to quit or restart
-        instruction_text = font.render("Press ESC to quit", True, TEXT_COLOR)
+        instruction_text = font.render("Press ESC to quit", True, Colour.WHITE)
         instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
         window.blit(instruction_text, instruction_rect)
 
