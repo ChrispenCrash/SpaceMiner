@@ -37,8 +37,11 @@ class Player(pygame.sprite.Sprite):
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         self.pos = pygame.math.Vector2(self.rect.center)
-        self.direction = pygame.math.Vector2(0, -1)  # Facing upwards
-        self.angle = 0
+        # Start with a random angle
+        self.angle = random.uniform(0, 360)
+        # Direction vector based on the angle
+        radians = math.radians(self.angle)
+        self.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -47,33 +50,34 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_RIGHT]:
             self.angle += PLAYER_ROTATE_SPEED
 
-        # Update direction based on angle
-        self.direction = pygame.math.Vector2(0, -1).rotate(self.angle)
+        # Keep angle within [0, 360)
+        self.angle %= 360
+
+        # Update direction vector based on angle
+        radians = math.radians(self.angle)
+        self.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
+
+        # Update position
         self.pos += self.direction * PLAYER_SPEED
 
         # Check for collisions with walls and bounce
-        bounced = False
         if self.pos.x <= 10:
             self.pos.x = 10
             self.direction.x *= -1
-            bounced = True
+            self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
         elif self.pos.x >= WIDTH - 10:
             self.pos.x = WIDTH - 10
             self.direction.x *= -1
-            bounced = True
+            self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
 
         if self.pos.y <= 10:
             self.pos.y = 10
             self.direction.y *= -1
-            bounced = True
+            self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
         elif self.pos.y >= HEIGHT - 10:
             self.pos.y = HEIGHT - 10
             self.direction.y *= -1
-            bounced = True
-
-        if bounced:
-            # Recalculate angle based on new direction
-            self.angle = self.direction.angle_to(pygame.math.Vector2(0, -1))
+            self.angle = math.degrees(math.atan2(self.direction.y, self.direction.x))
 
         # Rotate the image
         self.image = pygame.transform.rotate(self.image_orig, -self.angle)
