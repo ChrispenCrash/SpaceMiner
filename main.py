@@ -2,6 +2,7 @@ import pygame
 import random
 import math
 import sys
+from enum import Enum
 
 # Initialize Pygame
 pygame.init()
@@ -30,6 +31,12 @@ clock = pygame.time.Clock()
 # Font for score and timer
 font = pygame.font.SysFont(None, 36)
 large_font = pygame.font.SysFont(None, 72)
+
+# Define GameState Enum
+class GameState(Enum):
+    PLAYING = 1
+    WON = 2
+    GAME_OVER = 3
 
 # Player Class
 class Player(pygame.sprite.Sprite):
@@ -110,7 +117,7 @@ for _ in range(FOOD_COUNT):
 # Game Variables
 score = 0
 start_time = pygame.time.get_ticks()
-game_state = 'playing'  # Can be 'playing', 'won', or 'game_over'
+game_state = GameState.PLAYING  # Using Enum instead of string
 
 # Game Loop
 running = True
@@ -123,7 +130,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    if game_state == 'playing':
+    if game_state == GameState.PLAYING:
         # Update
         all_sprites.update()
 
@@ -134,9 +141,9 @@ while running:
 
         # Check for win or time up
         if score >= FOOD_COUNT:
-            game_state = 'won'
+            game_state = GameState.WON
         elif elapsed_time >= TIME_LIMIT:
-            game_state = 'game_over'
+            game_state = GameState.GAME_OVER
 
         # Draw
         window.fill(BLACK)
@@ -155,7 +162,7 @@ while running:
     else:
         # Display victory or game over screen
         window.fill(BLACK)
-        if game_state == 'won':
+        if game_state == GameState.WON:
             message_text = large_font.render("You won!", True, VICTORY_COLOR)
         else:
             message_text = large_font.render("Game over!", True, GAME_OVER_COLOR)
