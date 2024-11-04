@@ -12,6 +12,7 @@ pygame.init()
 
 # Game Constants
 WIDTH, HEIGHT = 600, 600
+GAME_SIZE_MULTIPLIER = 4
 FPS = 60
 PLAYER_SPEED = 5
 PLAYER_ROTATE_SPEED = 5
@@ -19,7 +20,7 @@ ASTEROID_COUNT = 10
 TIME_LIMIT = 30  # in seconds
 
 # Define the larger game space dimensions
-GAME_WIDTH, GAME_HEIGHT = WIDTH * 2, HEIGHT * 2  # Twice the size of the window
+GAME_WIDTH, GAME_HEIGHT = WIDTH * GAME_SIZE_MULTIPLIER, HEIGHT * GAME_SIZE_MULTIPLIER
 
 # Add a camera offset
 camera_offset = pygame.Vector2(0, 0)
