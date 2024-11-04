@@ -109,8 +109,15 @@ while running:
         window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
 
     else:
+
+        # Draw Background Stars
+        window.fill(Colour.DARK_GREY)
+        for (x, y) in stars:
+            star_x = x - camera_offset.x
+            star_y = y - camera_offset.y
+            pygame.draw.rect(window, Colour.WHITE, (star_x, star_y, 2, 2))
+
         # Display victory or game over screen
-        window.fill(Colour.BLACK)
         if game_state == GameState.WON:
             message_text = large_font.render("You won!", True, Colour.GREEN)
         else:
