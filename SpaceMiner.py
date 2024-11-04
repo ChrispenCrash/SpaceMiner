@@ -16,11 +16,13 @@ GAME_SIZE_MULTIPLIER = 4
 FPS = 60
 PLAYER_SPEED = 5
 PLAYER_ROTATE_SPEED = 5
-ASTEROID_COUNT = 10
+ASTEROID_DENSITY = 0.00001
+ASTEROID_WIN_COUNT = 15
 TIME_LIMIT = 30  # in seconds
 
 # Define the larger game space dimensions
 GAME_WIDTH, GAME_HEIGHT = WIDTH * GAME_SIZE_MULTIPLIER, HEIGHT * GAME_SIZE_MULTIPLIER
+ASTEROID_COUNT = int(GAME_WIDTH * GAME_HEIGHT * ASTEROID_DENSITY)
 
 # Add a camera offset
 camera_offset = pygame.Vector2(0, 0)
@@ -202,7 +204,7 @@ while running:
             score += len(hits)
 
         # Check for win or time up
-        if score >= ASTEROID_COUNT:
+        if score >= ASTEROID_WIN_COUNT:
             game_state = GameState.WON
         elif elapsed_time >= TIME_LIMIT:
             game_state = GameState.GAME_OVER
