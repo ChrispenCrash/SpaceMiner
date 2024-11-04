@@ -1,6 +1,6 @@
 # SpaceMiner
 
-SpaceMiner is a simple game where the objective is to enough asteroids before the time elapses. 
+SpaceMiner is a simple game where the objective is to collect enough asteroids before the time elapses. 
 
 ## Installation
 
