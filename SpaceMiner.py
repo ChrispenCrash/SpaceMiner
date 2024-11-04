@@ -3,15 +3,13 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 import pygame
 import random
-import math
 import sys
 from enums import GameState, Colour
 
 from player import Player
 from asteroid import Asteroid
 
-from settings import WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT
-from settings import FPS, PLAYER_SPEED, PLAYER_ROTATE_SPEED
+from settings import WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, FPS
 from settings import ASTEROID_COUNT, ASTEROID_WIN_COUNT, TIME_LIMIT
 
 # Initialize Pygame
