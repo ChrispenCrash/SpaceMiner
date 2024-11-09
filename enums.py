@@ -1,9 +1,17 @@
-from enum import Enum
+from enum import Enum, auto
 
 class GameState(Enum):
-    PLAYING = 1
-    WON = 2
-    GAME_OVER = 3
+    PLAYING = auto()
+    WON = auto()
+    GAME_OVER = auto()
+    PAUSED = auto()
+
+class GameScreen(Enum):
+    SPLASH = auto()
+    MAIN_MENU = auto()
+    SINGLE_PLAYER = auto()
+    MULTI_PLAYER = auto()
+    SETTINGS = auto()
 
 class Colour(tuple, Enum):
     BLACK = (0, 0, 0)
