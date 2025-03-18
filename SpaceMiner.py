@@ -220,9 +220,20 @@ while running:
         window.blit(message_text, message_rect)
 
         # Optionally, you can add instructions to quit or restart
-        instruction_text = font.render("Press R to restart, M for main menu, or ESC to quit", True, Colour.WHITE)
-        instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
-        window.blit(instruction_text, instruction_rect)
+        # instruction_text = font.render("Press R to restart, M for main menu, or ESC to quit", True, Colour.WHITE)
+        # instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+        # window.blit(instruction_text, instruction_rect)
+        reset_text = font.render("Press R to restart", True, Colour.WHITE)
+        reset_rect = reset_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+        window.blit(reset_text, reset_rect)
+
+        main_menu_text = font.render("Press M for Main Menu", True, Colour.WHITE)
+        main_menu_rect = main_menu_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+        window.blit(main_menu_text, main_menu_rect)
+
+        quit_text = font.render("Press ESC to quit", True, Colour.WHITE)
+        quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 150))
+        window.blit(quit_text, quit_rect)
 
         # Check for exit
         keys = pygame.key.get_pressed()
