@@ -57,7 +57,7 @@ for _ in range(ASTEROID_COUNT):
 # Game Variables
 score = 0
 start_time = pygame.time.get_ticks()
-game_state = GameState.PLAYING
+game_state = GameState.MAIN_MENU  # Start with the main menu
 
 def reset_game():
     global score, start_time, game_state, all_sprites, asteroid_group, player
@@ -73,6 +73,54 @@ def reset_game():
         all_sprites.add(asteroid)
         asteroid_group.add(asteroid)
 
+def display_main_menu():
+    window.fill(Colour.BLACK)
+    title_text = large_font.render("Space Miner", True, Colour.WHITE)
+    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
+    window.blit(title_text, title_rect)
+
+    single_player_text = font.render("1. Single Player", True, Colour.WHITE)
+    single_player_rect = single_player_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 20))
+    window.blit(single_player_text, single_player_rect)
+
+    multiplayer_text = font.render("2. Multiplayer", True, Colour.WHITE)
+    multiplayer_rect = multiplayer_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 20))
+    window.blit(multiplayer_text, multiplayer_rect)
+
+    options_text = font.render("3. Options", True, Colour.WHITE)
+    options_rect = options_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
+    window.blit(options_text, options_rect)
+
+    exit_text = font.render("4. Exit", True, Colour.WHITE)
+    exit_rect = exit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+    window.blit(exit_text, exit_rect)
+
+    pygame.display.flip()
+
+def display_pause_menu():
+    window.fill(Colour.BLACK)
+    pause_text = large_font.render("Paused", True, Colour.WHITE)
+    pause_rect = pause_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
+    window.blit(pause_text, pause_rect)
+
+    resume_text = font.render("Press P to resume", True, Colour.WHITE)
+    resume_rect = resume_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 20))
+    window.blit(resume_text, resume_rect)
+
+    reset_text = font.render("Press R to reset", True, Colour.WHITE)
+    reset_rect = reset_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 20))
+    window.blit(reset_text, reset_rect)
+
+    main_menu_text = font.render("Press M for Main Menu", True, Colour.WHITE)
+    main_menu_rect = main_menu_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
+    window.blit(main_menu_text, main_menu_rect)
+
+    quit_text = font.render("Press ESC to quit", True, Colour.WHITE)
+    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+    window.blit(quit_text, quit_rect)
+
+    pygame.display.flip()
+
 # Game Loop
 running = True
 while running:
@@ -84,13 +132,38 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_p:
-                if game_state == GameState.PLAYING:
-                    game_state = GameState.PAUSED
-                elif game_state == GameState.PAUSED:
+            if game_state == GameState.MAIN_MENU:
+                if event.key == pygame.K_1:
                     game_state = GameState.PLAYING
+                elif event.key == pygame.K_2:
+                    print("Multiplayer mode not implemented yet.")
+                elif event.key == pygame.K_3:
+                    print("Options menu not implemented yet.")
+                elif event.key == pygame.K_4:
+                    running = False
+            elif game_state == GameState.PLAYING:
+                if event.key == pygame.K_p:
+                    game_state = GameState.PAUSED
+            elif game_state == GameState.PAUSED:
+                if event.key == pygame.K_p:
+                    game_state = GameState.PLAYING
+                elif event.key == pygame.K_m:
+                    game_state = GameState.MAIN_MENU
+                elif event.key == pygame.K_r:
+                    reset_game()
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
+            elif game_state in [GameState.WON, GameState.GAME_OVER]:
+                if event.key == pygame.K_r:
+                    reset_game()
+                elif event.key == pygame.K_m:
+                    game_state = GameState.MAIN_MENU
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
 
-    if game_state == GameState.PLAYING:
+    if game_state == GameState.MAIN_MENU:
+        display_main_menu()
+    elif game_state == GameState.PLAYING:
         # Update
         # all_sprites.update()
         for sprite in all_sprites:
@@ -131,31 +204,7 @@ while running:
         window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
 
     elif game_state == GameState.PAUSED:
-        # Draw Background Stars
-        window.blit(background, -camera_offset)
-
-        # Display pause menu
-        pause_text = large_font.render("Paused", True, Colour.WHITE)
-        pause_rect = pause_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
-        window.blit(pause_text, pause_rect)
-
-        resume_text = font.render("Press P to resume", True, Colour.WHITE)
-        resume_rect = resume_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-        window.blit(resume_text, resume_rect)
-
-        reset_text = font.render("Press R to reset", True, Colour.WHITE)
-        reset_rect = reset_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
-        window.blit(reset_text, reset_rect)
-
-        quit_text = font.render("Press ESC to quit", True, Colour.WHITE)
-        quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
-        window.blit(quit_text, quit_rect)
-
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_r]:
-            reset_game()
-        elif keys[pygame.K_ESCAPE]:
-            running = False
+        display_pause_menu()
 
     else:
         # Draw Background Stars
@@ -171,7 +220,7 @@ while running:
         window.blit(message_text, message_rect)
 
         # Optionally, you can add instructions to quit or restart
-        instruction_text = font.render("Press R to restart or ESC to quit", True, Colour.WHITE)
+        instruction_text = font.render("Press R to restart, M for main menu, or ESC to quit", True, Colour.WHITE)
         instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
         window.blit(instruction_text, instruction_rect)
 
@@ -181,6 +230,8 @@ while running:
             running = False
         elif keys[pygame.K_r]:
             reset_game()
+        elif keys[pygame.K_m]:
+            game_state = GameState.MAIN_MENU
 
     pygame.display.flip()
 
