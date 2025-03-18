@@ -10,7 +10,12 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Load the pixel art rocket image
-        self.image_orig = pygame.image.load("assets/player_rocket.png").convert_alpha()
+        try:
+            self.image_orig = pygame.image.load("assets/player_rocket.png").convert_alpha()
+        except pygame.error as e:
+            print(f"Error loading player image: {e}")
+            pygame.quit()
+            
         self.image_orig = pygame.transform.scale(self.image_orig, (40, 40))  # Adjust dimensions as needed
 
         self.image = self.image_orig.copy()

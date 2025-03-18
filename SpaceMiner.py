@@ -35,6 +35,12 @@ STAR_COUNT = int(GAME_WIDTH * GAME_HEIGHT * STAR_DENSITY)
 # Generate scaled star positions
 stars = [(random.randint(0, GAME_WIDTH), random.randint(0, GAME_HEIGHT)) for _ in range(STAR_COUNT)]
 
+# Create a background surface for stars
+background = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
+background.fill(Colour.DARK_GREY)
+for (x, y) in stars:
+    pygame.draw.rect(background, Colour.WHITE, (x, y, 2, 2))
+
 # Sprite Groups
 all_sprites = pygame.sprite.Group()
 asteroid_group = pygame.sprite.Group()
@@ -53,6 +59,20 @@ score = 0
 start_time = pygame.time.get_ticks()
 game_state = GameState.PLAYING
 
+def reset_game():
+    global score, start_time, game_state, all_sprites, asteroid_group, player
+    score = 0
+    start_time = pygame.time.get_ticks()
+    game_state = GameState.PLAYING
+    all_sprites.empty()
+    asteroid_group.empty()
+    player = Player()
+    all_sprites.add(player)
+    for _ in range(ASTEROID_COUNT):
+        asteroid = Asteroid()
+        all_sprites.add(asteroid)
+        asteroid_group.add(asteroid)
+
 # Game Loop
 running = True
 while running:
@@ -63,6 +83,12 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                if game_state == GameState.PLAYING:
+                    game_state = GameState.PAUSED
+                elif game_state == GameState.PAUSED:
+                    game_state = GameState.PLAYING
 
     if game_state == GameState.PLAYING:
         # Update
@@ -85,11 +111,7 @@ while running:
             game_state = GameState.GAME_OVER
 
         # Draw Background Stars
-        window.fill(Colour.DARK_GREY)
-        for (x, y) in stars:
-            star_x = x - camera_offset.x
-            star_y = y - camera_offset.y
-            pygame.draw.rect(window, Colour.WHITE, (star_x, star_y, 2, 2))
+        window.blit(background, -camera_offset)
 
         # Draw all elements
         for sprite in all_sprites:
@@ -108,14 +130,36 @@ while running:
         timer_text = font.render(f"Time: {minutes}:{seconds:02}", True, Colour.WHITE)
         window.blit(timer_text, (WIDTH - timer_text.get_width() - 10, 10))
 
-    else:
-
+    elif game_state == GameState.PAUSED:
         # Draw Background Stars
-        window.fill(Colour.DARK_GREY)
-        for (x, y) in stars:
-            star_x = x - camera_offset.x
-            star_y = y - camera_offset.y
-            pygame.draw.rect(window, Colour.WHITE, (star_x, star_y, 2, 2))
+        window.blit(background, -camera_offset)
+
+        # Display pause menu
+        pause_text = large_font.render("Paused", True, Colour.WHITE)
+        pause_rect = pause_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+        window.blit(pause_text, pause_rect)
+
+        resume_text = font.render("Press P to resume", True, Colour.WHITE)
+        resume_rect = resume_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        window.blit(resume_text, resume_rect)
+
+        reset_text = font.render("Press R to reset", True, Colour.WHITE)
+        reset_rect = reset_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+        window.blit(reset_text, reset_rect)
+
+        quit_text = font.render("Press ESC to quit", True, Colour.WHITE)
+        quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+        window.blit(quit_text, quit_rect)
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            reset_game()
+        elif keys[pygame.K_ESCAPE]:
+            running = False
+
+    else:
+        # Draw Background Stars
+        window.blit(background, -camera_offset)
 
         # Display victory or game over screen
         if game_state == GameState.WON:
@@ -127,7 +171,7 @@ while running:
         window.blit(message_text, message_rect)
 
         # Optionally, you can add instructions to quit or restart
-        instruction_text = font.render("Press ESC to quit", True, Colour.WHITE)
+        instruction_text = font.render("Press R to restart or ESC to quit", True, Colour.WHITE)
         instruction_rect = instruction_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
         window.blit(instruction_text, instruction_rect)
 
@@ -135,6 +179,8 @@ while running:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_ESCAPE]:
             running = False
+        elif keys[pygame.K_r]:
+            reset_game()
 
     pygame.display.flip()
 
