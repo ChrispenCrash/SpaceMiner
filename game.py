@@ -44,6 +44,7 @@ class Game:
         if event.type == pygame.KEYDOWN:
             if self.game_state == GameState.MAIN_MENU:
                 if event.key == pygame.K_1:
+                    self.reset_game()  # Reset the game when starting a new game
                     self.game_state = GameState.PLAYING
                 elif event.key == pygame.K_2:
                     print("Multiplayer mode not implemented yet.")
