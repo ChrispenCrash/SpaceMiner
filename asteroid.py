@@ -14,3 +14,6 @@ class Asteroid(pygame.sprite.Sprite):
         
         # Set the position of the asteroid
         self.rect = self.image.get_rect(center=(random.randint(10, GAME_WIDTH - 10), random.randint(10, GAME_HEIGHT - 10)))
+
+    def draw(self, surface, camera_offset):
+        surface.blit(self.image, self.rect.topleft - camera_offset)
