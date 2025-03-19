@@ -74,7 +74,6 @@ class Player(pygame.sprite.Sprite):
         camera_offset.x = max(0, min(self.pos.x - WIDTH / 2, GAME_WIDTH - WIDTH))
         camera_offset.y = max(0, min(self.pos.y - HEIGHT / 2, GAME_HEIGHT - HEIGHT))
 
-
     def draw(self, surface, camera_offset):
         # Draw the tail relative to the camera offset
         max_radius = 7  # Largest radius for the part of the tail closest to the player
@@ -96,3 +95,16 @@ class Player(pygame.sprite.Sprite):
 
         # Draw the player itself relative to the camera offset
         surface.blit(self.image, self.rect.topleft - camera_offset)
+
+    def serialize(self):
+        return {'pos': (self.pos.x, self.pos.y), 'angle': self.angle}
+
+    @staticmethod
+    def deserialize(data):
+        player = Player()
+        player.pos = pygame.Vector2(data['pos'])
+        player.angle = data['angle']
+        radians = math.radians(player.angle)
+        player.direction = pygame.math.Vector2(math.cos(radians), math.sin(radians))
+        player.rect = player.image.get_rect(center=player.pos)
+        return player
