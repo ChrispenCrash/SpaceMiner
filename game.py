@@ -4,6 +4,7 @@ from player import Player
 from asteroid import Asteroid
 from settings import WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, ASTEROID_COUNT, ASTEROID_WIN_COUNT, TIME_LIMIT
 from utils import display_main_menu, display_pause_menu, display_end_screen
+from network import Network
 import random
 import sys
 
@@ -17,6 +18,8 @@ class Game:
         self.background = self.create_background()
         self.reset_game()
         self.game_state = GameState.MAIN_MENU
+        self.network = None
+        self.player_id = None
 
     def create_background(self):
         STAR_DENSITY = 0.0002
@@ -37,6 +40,7 @@ class Game:
         self.all_sprites.add(self.player)
         for _ in range(ASTEROID_COUNT):
             asteroid = Asteroid()
+            print(f"Created asteroid at position {asteroid.pos}")
             self.all_sprites.add(asteroid)
             self.asteroid_group.add(asteroid)
 
@@ -47,7 +51,7 @@ class Game:
                     self.reset_game()  # Reset the game when starting a new game
                     self.game_state = GameState.PLAYING
                 elif event.key == pygame.K_2:
-                    print("Multiplayer mode not implemented yet.")
+                    self.start_multiplayer()
                 elif event.key == pygame.K_3:
                     print("Options menu not implemented yet.")
                 elif event.key == pygame.K_4:
@@ -77,6 +81,19 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
+    def start_multiplayer(self):
+        try:
+            self.network = Network()
+            self.player_id = self.network.receive()
+            print(f"Player ID: {self.player_id}")
+            initial_game_state = self.network.receive()
+            print(f"Initial game state: {initial_game_state}")
+            self.update_multiplayer(initial_game_state)
+            self.game_state = GameState.PLAYING
+        except Exception as e:
+            print(f"Unable to connect to server: {e}")
+            self.game_state = GameState.MAIN_MENU
+
     def update(self, dt):
         if self.game_state == GameState.PLAYING:
             self.update_playing(dt)
@@ -86,15 +103,36 @@ class Game:
             pass
 
     def update_playing(self, dt):
-        self.all_sprites.update(self.camera_offset)
-        hits = pygame.sprite.spritecollide(self.player, self.asteroid_group, True)
-        if hits:
-            self.score += len(hits)
-        elapsed_time = (pygame.time.get_ticks() - self.start_time) / 1000
-        if self.score >= ASTEROID_WIN_COUNT:
-            self.game_state = GameState.WON
-        elif elapsed_time >= TIME_LIMIT:
-            self.game_state = GameState.GAME_OVER
+        if self.network:
+            self.network.send({'type': 'move', 'pos': self.player.pos})
+            game_state = self.network.receive()
+            self.update_multiplayer(game_state)
+        else:
+            self.all_sprites.update(self.camera_offset)
+            hits = pygame.sprite.spritecollide(self.player, self.asteroid_group, True)
+            if hits:
+                self.score += len(hits)
+            elapsed_time = (pygame.time.get_ticks() - self.start_time) / 1000
+            if self.score >= ASTEROID_WIN_COUNT:
+                self.game_state = GameState.WON
+            elif elapsed_time >= TIME_LIMIT:
+                self.game_state = GameState.GAME_OVER
+
+    def update_multiplayer(self, game_state):
+        print("Updating multiplayer game state")
+        self.all_sprites.empty()
+        self.asteroid_group.empty()
+        for player_id, player_data in game_state['players'].items():
+            print(f"Adding player {player_id} at position {player_data['pos']}")
+            player = Player.deserialize(player_data)
+            self.all_sprites.add(player)
+            if player_id == self.player_id:
+                self.player = player
+        for asteroid_data in game_state['asteroids']:
+            print(f"Adding asteroid at position {asteroid_data['pos']} with angle {asteroid_data['angle']}")
+            asteroid = Asteroid.deserialize(asteroid_data)
+            self.asteroid_group.add(asteroid)
+            self.all_sprites.add(asteroid)
 
     def draw(self):
         if self.game_state == GameState.MAIN_MENU:
