@@ -9,17 +9,18 @@ import random
 import sys
 
 class Game:
-    def __init__(self, window):
+    def __init__(self, window, debug=False):
         self.window = window
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 36)
         self.large_font = pygame.font.SysFont(None, 72)
         self.camera_offset = pygame.Vector2(0, 0)
         self.background = self.create_background()
-        self.reset_game()
         self.game_state = GameState.MAIN_MENU
         self.network = None
         self.player_id = None
+        self.debug = debug
+        self.reset_game()
 
     def create_background(self):
         STAR_DENSITY = 0.0002
@@ -38,11 +39,17 @@ class Game:
         self.asteroid_group = pygame.sprite.Group()
         self.player = Player()
         self.all_sprites.add(self.player)
+        
         for _ in range(ASTEROID_COUNT):
             asteroid = Asteroid()
-            print(f"Created asteroid at position {asteroid.pos}")
+            # if self.debug:
+                # print(f"Created asteroid at position {asteroid.pos}")
             self.all_sprites.add(asteroid)
             self.asteroid_group.add(asteroid)
+        if self.debug:
+            print(f"Game reset. Created {ASTEROID_COUNT} new asteroids")
+        # print(self.all_sprites)
+        # print(self.asteroid_group)
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -85,9 +92,11 @@ class Game:
         try:
             self.network = Network()
             self.player_id = self.network.receive()
-            print(f"Player ID: {self.player_id}")
+            if self.debug:
+                print(f"Player ID: {self.player_id}")
             initial_game_state = self.network.receive()
-            print(f"Initial game state: {initial_game_state}")
+            if self.debug:
+                print(f"Initial game state: {initial_game_state}")
             self.update_multiplayer(initial_game_state)
             self.game_state = GameState.PLAYING
         except Exception as e:
@@ -119,17 +128,21 @@ class Game:
                 self.game_state = GameState.GAME_OVER
 
     def update_multiplayer(self, game_state):
-        print("Updating multiplayer game state")
+        if self.debug:
+            print("Updating multiplayer game state")
+            print(f"Received game state: {game_state}")
         self.all_sprites.empty()
         self.asteroid_group.empty()
         for player_id, player_data in game_state['players'].items():
-            print(f"Adding player {player_id} at position {player_data['pos']}")
+            if self.debug:
+                print(f"Adding player {player_id} at position {player_data['pos']}")
             player = Player.deserialize(player_data)
             self.all_sprites.add(player)
             if player_id == self.player_id:
                 self.player = player
         for asteroid_data in game_state['asteroids']:
-            print(f"Adding asteroid at position {asteroid_data['pos']} with angle {asteroid_data['angle']}")
+            if self.debug:
+                print(f"Adding asteroid at position {asteroid_data['pos']} with angle {asteroid_data['angle']}")
             asteroid = Asteroid.deserialize(asteroid_data)
             self.asteroid_group.add(asteroid)
             self.all_sprites.add(asteroid)

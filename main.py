@@ -1,15 +1,24 @@
 import pygame
+import os
 import sys
+import argparse
 from game import Game
 from settings import WIDTH, HEIGHT, FPS
 
+# doesn't work
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
+
 def main():
+    parser = argparse.ArgumentParser(description="Space Miner Game")
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    args = parser.parse_args()
+
     pygame.init()
     window = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Space Miner")
     clock = pygame.time.Clock()
 
-    game = Game(window)
+    game = Game(window, debug=args.debug)
 
     running = True
     while running:

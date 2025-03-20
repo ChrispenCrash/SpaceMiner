@@ -12,6 +12,10 @@ class Network:
         print(f"Sent data: {data}")
 
     def receive(self):
-        data = pickle.loads(self.client.recv(4096))
-        print(f"Received data: {data}")
-        return data
+        try:
+            data = pickle.loads(self.client.recv(4096))
+            print(f"Received data: {data}")
+            return data
+        except EOFError as e:
+            print(f"Connection closed by server: {e}")
+            return None
