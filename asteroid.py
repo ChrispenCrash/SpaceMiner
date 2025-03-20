@@ -1,6 +1,5 @@
 import pygame
 import random
-
 from settings import GAME_WIDTH, GAME_HEIGHT
 
 class Asteroid(pygame.sprite.Sprite):
@@ -22,12 +21,15 @@ class Asteroid(pygame.sprite.Sprite):
     def draw(self, surface, camera_offset):
         if self.image:
             surface.blit(self.image, self.rect.topleft - camera_offset)
+            # print(f"Asteroid drawn at position {self.rect.topleft - camera_offset}")
+
 
     def serialize(self):
         return {'pos': (self.pos.x, self.pos.y), 'angle': self.angle}
 
     @staticmethod
     def deserialize(data):
+        print(f"Deserializing asteroid with data: {data}")
         asteroid = Asteroid()
         asteroid.pos = pygame.Vector2(data['pos'])
         asteroid.angle = data['angle']
