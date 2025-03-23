@@ -2,7 +2,7 @@ import pygame
 from enums import GameState, Colour
 from player import Player
 from asteroid import Asteroid
-from settings import WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, ASTEROID_COUNT, ASTEROID_WIN_COUNT, TIME_LIMIT
+from settings import WIDTH, GAME_WIDTH, GAME_HEIGHT, ASTEROID_COUNT, ASTEROID_WIN_COUNT, TIME_LIMIT, STAR_DENSITY
 from utils import display_main_menu, display_pause_menu, display_end_screen
 from network import Network
 import random
@@ -15,18 +15,19 @@ class Game:
         self.font = pygame.font.SysFont(None, 36)
         self.large_font = pygame.font.SysFont(None, 72)
         self.camera_offset = pygame.Vector2(0, 0)
-        self.background = self.create_background()
+        self.debug = debug
         self.game_state = GameState.MAIN_MENU
         self.network = None
         self.player_id = None
-        self.debug = debug
+        
+        self.background = self.create_background()
         self.reset_game()
 
     def create_background(self):
-        STAR_DENSITY = 0.0002
         STAR_COUNT = int(GAME_WIDTH * GAME_HEIGHT * STAR_DENSITY)
         stars = [(random.randint(0, GAME_WIDTH), random.randint(0, GAME_HEIGHT)) for _ in range(STAR_COUNT)]
         background = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
+        print(f"Created background with dimensions {background.get_size()}") if self.debug else None
         background.fill(Colour.DARK_GREY)
         for (x, y) in stars:
             pygame.draw.rect(background, Colour.WHITE, (x, y, 2, 2))
@@ -42,14 +43,10 @@ class Game:
         
         for _ in range(ASTEROID_COUNT):
             asteroid = Asteroid()
-            # if self.debug:
-                # print(f"Created asteroid at position {asteroid.pos}")
             self.all_sprites.add(asteroid)
             self.asteroid_group.add(asteroid)
-        if self.debug:
-            print(f"Game reset. Created {ASTEROID_COUNT} new asteroids")
-        # print(self.all_sprites)
-        # print(self.asteroid_group)
+        
+        print(f"Game reset. Created {ASTEROID_COUNT} new asteroids") if self.debug else None
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -92,11 +89,9 @@ class Game:
         try:
             self.network = Network()
             self.player_id = self.network.receive()
-            if self.debug:
-                print(f"Player ID: {self.player_id}")
+            print(f"Player ID: {self.player_id}") if self.debug else None
             initial_game_state = self.network.receive()
-            if self.debug:
-                print(f"Initial game state: {initial_game_state}")
+            print(f"Initial game state: {initial_game_state}") if self.debug else None
             self.update_multiplayer(initial_game_state)
             self.game_state = GameState.PLAYING
         except Exception as e:
@@ -134,15 +129,13 @@ class Game:
         self.all_sprites.empty()
         self.asteroid_group.empty()
         for player_id, player_data in game_state['players'].items():
-            if self.debug:
-                print(f"Adding player {player_id} at position {player_data['pos']}")
+            print(f"Adding player {player_id} at position {player_data['pos']}") if self.debug else None
             player = Player.deserialize(player_data)
             self.all_sprites.add(player)
             if player_id == self.player_id:
                 self.player = player
         for asteroid_data in game_state['asteroids']:
-            if self.debug:
-                print(f"Adding asteroid at position {asteroid_data['pos']} with angle {asteroid_data['angle']}")
+            print(f"Adding asteroid at position {asteroid_data['pos']} with angle {asteroid_data['angle']}") if self.debug else None
             asteroid = Asteroid.deserialize(asteroid_data)
             self.asteroid_group.add(asteroid)
             self.all_sprites.add(asteroid)
@@ -160,6 +153,7 @@ class Game:
     def draw_playing(self):
         self.window.blit(self.background, -self.camera_offset)
         for sprite in self.all_sprites:
+            print(f"Drawing sprite {sprite} at position {sprite.pos} and size {sprite.rect.size}") if self.debug else None
             sprite.draw(self.window, self.camera_offset)
         score_text = self.font.render(f"Score: {self.score}", True, Colour.WHITE)
         self.window.blit(score_text, (10, 10))

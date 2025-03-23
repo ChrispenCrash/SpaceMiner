@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from settings import WIDTH, HEIGHT, PLAYER_SPEED
+from settings import WIDTH, HEIGHT, PLAYER_SPEED, PLAYER_HEIGHT, PLAYER_WIDTH
 from settings import PLAYER_ROTATE_SPEED, GAME_WIDTH, GAME_HEIGHT
 from enums import Colour
 
@@ -16,7 +16,7 @@ class Player(pygame.sprite.Sprite):
             print(f"Error loading player image: {e}")
             pygame.quit()
             
-        self.image_orig = pygame.transform.scale(self.image_orig, (40, 40))  # Adjust dimensions as needed
+        self.image_orig = pygame.transform.scale(self.image_orig, (PLAYER_HEIGHT, PLAYER_WIDTH))  # Adjust dimensions as needed
 
         self.image = self.image_orig.copy()
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
